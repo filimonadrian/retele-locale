@@ -31,6 +31,26 @@ Difference:
 - For hub, the ARP process tries to send an ARP request for that ip address and buffers this packet, but for the switch, the IP address is
 in the ARP table. The ARP process sets the de destinationt MAC to that found in the ARP table.
 
+- switch:
+  - switch ul stie cand ajunge un pachet cu destinatia mac ul respectiv trimite pachetul pe port-ul respectiv
+  - el hotaraste pe unde sa il trimita
+  - daca nu exista o intrare in tabela pentru acel mac, sw-ul o sa faca broadcast la pachete
+- HUB
+  - HUB-el este efectiv un convertor. El nu se gandeste la ce o faca cu pachetele, el doar expandeaza domeniul de coliziune. Ia pachetul si il  
+    - trimite pe toate celelalte porturi, este treaba calculatorului sa vada daca este pentru el pachetul 
+
+### Tabela cam(comutare):
+
+- coloana mac si coloana port:
+- cand se deschide sw, el nu are nimic trecuta in tabela
+- nu se poate ca in tabela sa fie un mac si mai multe porturi asociate
+
 
 ## Exercise 2
 
+- Apare o singura intrare deoarece adresa mac a lui PC1 nu poate aparea de doua ori in tabela
+- Trimitere de la PC2 la PC3 - apare inca o intrare in tabela pentru PC3
+
+## Exercise 3
+
+- 

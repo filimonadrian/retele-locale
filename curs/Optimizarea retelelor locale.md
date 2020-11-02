@@ -131,9 +131,8 @@
     - cazul 2: prioritati diferite
       - se alege cel cu prioritatea cea mai mica( care au prioritate egala se compara dupa MAC)
 2. Root PORTS
-3. ROOT PORTS 
    - Fiecare switch non-root trebuie sa aiba un root port
-4. Blocked Ports
+3. Blocked Ports
    - se blocheaza din porturi
    - atunci cand crapa chestii, incep sa se deschida porturi
      - UN PORT BLOCAT NU TRIMITE, DAR ASCULTA. ASA IMI DAU SEAMA CA CEVA A CRAPAT

@@ -1,0 +1,56 @@
+# Laborator 8
+
+# Exercitiul 2
+
+Corina: 
+ssh-keygen -t rsa
+ssh-copy-id student@host
+
+# Exercitiul 3
+
+#Corina
+scp -r student@host:/home/student/assignment /home/student
+scp -r ./solution student@host:/home/student
+
+# Exercitiul 4
+
+student:
+nc -l 12345 > file-100M-nc.dat
+
+
+green:
+time cat file-100M.dat | nc -q0 host 12345
+time curl -T file-100M.dat -u student:student ftp://red/file-100M-ftp.dat
+time scp file-100M.dat student@host:file-100M-scp.dat
+
+Exercitiul 5
+
+Root pe host:
+tcpdump -vvv -i veth-green
+
+# SAU, pentru a afișa DOAR outputul ce conține student:
+root@host:~# tcpdump -vvv -i veth-green | grep -i student
+
+Exercitiul 6:
+# blocheaza telnet
+iptables -A FORWARD -d green -p tcp --dport telnet -j REJECT
+
+#blocheaza ftp
+iptables -A FORWARD -d green -p tcp --dport ftp -j REJECT
+
+Exercitiul 7
+#blocheaza ssh
+iptables -A FORWARD -d green -p tcp --dport ssh -j REJECT
+
+Exercitiul 8
+#deblocheaza ssh
+iptables -I FORWARD 1 -d green -p tcp --dport ssh -j ACCEPT
+
+Exercitiul 9
+#sterge regulile
+iptables -F
+Exercitiul 11
+# adaug o regula pe red: sa nu primesc conexiuni din exterior
+iptables -I FORWARD -m state --state NEW -d red -p tcp --dport ssh -j REJECT
+iptables -L FORWARD -n -v
+

@@ -1,0 +1,14 @@
+# LAB 9
+
+#connect to fep 
+ssh costel.filimon@fep.grid.pub.ro
+#connect to vm from fep
+ssh -i ~/.ssh/openstack.key student@10.9.3.28
+
+
+Activate permanent routing
+# for permanent routing uncomment 2 lines from 
+/etc/sysctl.conf 
+
+Exercise 1:
+

@@ -10,5 +10,149 @@ Activate permanent routing
 # for permanent routing uncomment 2 lines from 
 /etc/sysctl.conf 
 
-Exercise 1:
+# Exercise 1:
 
+# activeaza rutarea 
+sysctl -w net.ipv4.ip_forward=1
+
+# activeaza NAT
+iptables -t nat -A POSTROUTING -j MASQUERADE
+
+# afiseaza intreaga tabela nat
+iptables -t nat -L -n -v
+iptables -t nat -L POSTROUTING -n -v
+
+# Exercise 2:
+
+# green and red
+ping -c 3 8.8.8.8
+
+# host
+
+tcpdump -i veth-red ip dst host 8.8.8.8
+tcpdump -n -i any ip src host 8.8.8.8
+
+** poza la 19:08 **
+
+
+Exercise 3
+
+# host
+tcmpdump -i any ip src host 8.8.8.8
+tcpdump -n -i any ip src host 8.8.8.8
+tcpdump -n -i any ip src host 8.8.8.8
+tcpdump -n -i any ip dst host cs.pub.ro and tcp dst port 80
+tcpdump -n -i any ip host cs.pub.ro and tcp port 80
+
+
+Exercise 4
+
+// sunt probleme cu afisarea sursei si a destinatiei -- Sursa este host, nu red
+
+// stergem vechea regula de nat-are:
+iptables -t nat -D POSTROUTING -j MASQUERADE
+
+//verificam daca s-a sters
+iptables -t nat -L POSTROUTING -n -v
+
+// adaug o noua regula, dar specific sa se aplice NAT-are doar atunci cand ies
+// in internet, nu cand sunt in interiorul retelei locale
+
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+Exercise 5 - Port forwarding
+
+// statia red nu este disponibila din exterior
+// fac pe statia host port forwarding 
+// -- deschid un port si il forwardez catre portul 22 de pe red
+
+iptables -t nat -A PREROUTING -p tcp --dport 10022 -j DNAT --to-destination 192.168.1.2:22
+
+// verific tabela
+iptables -t nat -L prerouting -n -v 
+
+// verific ca merge port forwardingul
+// de pe fep: 
+ssh -l student 10.9.1.87 --port 10022
+
+// sterg vechea regula
+iptables -t nat -D PREROUTING -p tcp --dport 10022 -j DNAT --to-destination 192.168.1.2:22
+
+// adaug permisiunea sa mearga doar din exterior
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 10022 -j DNAT --to-destination 192.168.1.2:22
+
+Exercise 6 - Extindere Port forwarding
+
+// Extind metoda si pentru celelalte containere
+# ROOT
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 20022 -j DNAT --to-destination 192.168.2.2:22
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 30022 -j DNAT --to-destination 192.168.3.2:22
+
+Exercise 7 -- format pachete cu tcpdump
+
+# HOST:
+# inainte de NAT-are
+tcpdump -n -i eth0 tcp dst port 10022 -w /home/student/portfwd_eth0_output.pcap
+
+# dupa NAT-are
+tcpdump -n -i veth-red tcp dst port 22 -w /home/student/portfwd_veth-red_output.pcap
+
+# te conectezi de pe fep:
+ssh -l student 10.9.1.87 -p 10022
+
+
+Exercise 8 -- port forwarding pentru telnet
+
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 10023 -j DNAT --to-destination 192.168.1.2:23
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 20023 -j DNAT --to-destination 192.168.2.2:23
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 30023 -j DNAT --to-destination 192.168.3.2:23
+
+Exercise 9 -- configurare persistenta de rutare cu NAT
+
+# decomentez linia din /etc/sysctl.conf
+
+# salvare setari iptables
+iptables-save > /etc/iptables-rules
+
+# restore de configurari
+iptables-restore < /etc/iptables-rules
+
+# trebuie dat restart
+
+Exercise 10 -- tunel ssh invers
+
+ssh -l costel.filimon fep.grid.pub.ro.ro -R 10023:localhost:22
+# portul lui liviu
+ssh -l student localhost -p 10018
+
+netstat -tln | grep 100ZT
+
+Exercise 11
+iptables -t nat -A POSTROUTING -p tcp -o veth-red -j SNAT --to 10.9.1.87:45000-50000
+iptables -t nat -A POSTROUTING -p tcp -o veth-green -j SNAT --to 10.9.1.87:50000-55000
+iptables -t nat -A POSTROUTING -p tcp -o veth-blue -j SNAT --to 10.9.1.87:55000-60000
+
+
+1: [red] ping -c 2 8.8.8.8; [root] iptables -t nat -L POSTROUTING -n -v
+
+2: [host] tcpdump -i any ip dst host 8.8.8.8
+
+3: [red] wget cs.pub.ro (si tcpdump pentru a vedea ce se intampla)
+
+4: root@green:~# tcpdump -i green-eth0
+root@red:~# ping -c 2 green
+
+5: [green] ssh -l student host -p 10022
+
+7: fep: ssh -l student $ADRESA_IP_VM -p 10022
+Edited
+
+6: ssh $ADRESA_IP_MV -p 20022
+
+8: [fep] telnet $ADRESA_IP_VM 20023
+
+9: [host] cat /etc/network/interfaces si pe fisierul cu rute
+
+10: ssh -l student localhost -p 100ZT
+
+11: show pe regulile de postrounting

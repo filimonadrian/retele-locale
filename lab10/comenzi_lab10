@@ -1,0 +1,19 @@
+# LAB 10
+
+#connect to fep 
+ssh costel.filimon@fep.grid.pub.ro
+#connect to vm from fep
+ssh -i ~/.ssh/openstack.key student@10.9.0.161
+
+
+# Exercise 2
+iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.2:80
+
+
+# Exercise 3:
+
+
+
+mail -s "Email cu adresa specificata" djr3volt@gmail.com -r bogdan.georgescu@rl.cs.pub.ro
+uuencode to_send.txt to_send.txt | mail -s "file" djr3volt@gmail.com
+

@@ -1,0 +1,181 @@
+
+#connect to fep 
+ssh costel.filimon@fep.grid.pub.ro
+#connect to vm from fep
+ssh -i ~/.ssh/openstack.key student@10.9.3.28
+
+# Exercise 1:
+
+# host
+
+# set ip addresses
+ip address add 192.168.0.1/24 dev veth-red
+
+# red
+ip address add 192.168.0.2/24 dev red-eth0
+ip address show dev red-eth0
+
+# Exercise 2, 3, 4:
+# host: 
+
+# set ip address for every interface
+ip address add 10.10.10.1/24 dev veth-red && \
+ip address add 10.10.20.1/24 dev veth-green && \
+ip address add 10.10.30.1/24 dev veth-blue && \
+
+# change interfaces state to up
+ip link set dev veth-red up && \
+ip link set dev veth-green up && \
+ip link set dev veth-blue up && \
+
+# activate routing
+sysctl -w net.ipv4.ip_forward=1
+
+
+root@red:/$
+
+ip address add 10.10.10.2/24 dev red-eth0 && \
+ip link set dev red-eth0 up && \
+ip route add default via 10.10.10.1  && \
+ip link show dev red-eth0  && \
+ip route show
+ping 10.10.20.2
+
+
+root@green:/$
+
+ip address add 10.10.20.2/24 dev green-eth0  && \
+ip link set dev green-eth0 up  && \
+ip route add default via 10.10.20.1  && \
+ip route show 
+
+
+root@blue:/$ 
+
+ip address add 10.10.30.2/24 dev blue-eth0 && \
+ip link set dev blue-eth0 up  && \
+ip route add default via 10.10.30.1  && \ 
+ip route show
+
+# Ex. 5:
+# ping from machines
+
+#host 
+ping -c 1 10.10.10.2 && ping -c 1 10.10.20.2 && ping -c 1 10.10.30.2
+ip neigh sh
+
+# red 
+ping -c 1 10.10.20.2 && ping -c 1 10.10.30.2 
+ip neigh sh
+
+# green 
+ping -c 1 10.10.10.2 && ping -c 1 10.10.30.2
+ip neigh sh
+
+# blue
+ping -c 1 10.10.10.2 && ping -c 1 10.10.20.2 
+ip neigh sh
+
+# Exercise 6:
+
+# host:
+
+start_lab lab7 ex6
+ip r s
+ip address sh veth-red $ mask in /32 
+
+# red:
+
+ip r s
+ip address sh red-eth0 # mask in /24
+
+
+# Exercise7:
+
+# host
+
+# mask must be /24 like blue mask
+# set state to up
+
+ip address flush dev veth-blue && \
+ip address add 15.15.15.1/24 dev veth-blue && \
+ip link set dev veth-blue up
+
+blue:
+
+# set state to up
+ip link set dev blue-eth0 up
+ping 7.7.7.1
+
+
+# Exercise 8:
+
+# host
+# set ipv6 addresses, set state to up, activate routing
+
+ip -6 address add 2201::1/64 dev veth-red && \
+ip link set dev veth-red up && \
+ip -6 address add 2202::1/64 dev veth-green && \
+ip link set dev veth-green up && \
+ip -6 address add 2203::1/64 dev veth-blue && \
+ip link set dev veth-blue up && \
+sysctl -w net.ipv6.conf.all.forwarding=1 && \
+ip -6 address sh dev veth-red && \
+ip -6 address sh dev veth-green && \
+ip -6 address sh dev veth-blue
+
+ping -c 1 2201::2 && ping -c 1 2202::2 && ping -c 1 2203::2
+
+# red
+# set ipv6 address, set state to up and default gateway
+
+ip -6 address add 2201::2/64 dev red-eth0 && \
+ip link set dev red-eth0 up && \
+ip route add default via 2201::1 && \
+ip -6 address sh dev red-eth0
+
+ping -c 1 2202::2 && ping -c 1 2203::2
+
+# green
+# set ipv6 address, set state to up and default gateway
+
+ip -6 address add 2202::2/64 dev green-eth0 && \
+ip link set dev green-eth0 up && \
+ip route add default via 2202::1 && \
+ip -6 address sh dev green-eth0
+
+ping -c 1 2201::2 && ping -c 1 2203::2
+
+# blue
+# set ipv6 address, set state to up and default gateway
+
+ip -6 address add 2203::2/64 dev blue-eth0 && \
+ip link set dev blue-eth0 up && \
+ip route add default via 2203::1 && \
+ip -6 address sh dev blue-eth0
+
+ping -c 1 2201::2 && ping -c 1 2202::2
+
+
+# Bonus
+
+# for permanent routing uncomment 2 lines from 
+/etc/sysctl.conf 
+
+
+# configure this file to add addresses
+/etc/network/interfaces.d/containers.conf
+
+echo -e "
+iface veth-red inet6 static
+	address 2201::1/64
+
+iface veth-green inet6 static
+  address 2202::1/64
+
+iface veth-blue inet6 static
+   address 2203::1/64
+" >> /etc/network/interfaces.d/containers.conf
+
+# restart the internet connection
+ifdown --force --verbose veth-red && ifup --force --verbose veth-red

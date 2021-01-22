@@ -1,0 +1,83 @@
+
+
+Ex. 1
+dig +short myip.opendns.com @resolver1.opendns.com
+Iese in internet si extrage adresa sursa care a facut requestul
+
+Ex. 2
+
+whois 141.85.241.165
+Ofera detalii despre cine detine aceasta adresa -- Politehnica in cazul nostru
+
+Ex.3
+
+nmap -sn -oN nmap_scan 10.9.0.250/20
+
+
+Ex. 4
+
+nmap -sS -p 21,22,23,25,53,80,138,443,8000,8080 hermes.codacloud.net
+nmap -sS -p 21,22,23,25,53,80,138,443,8000,8080 hefaistos.codacloud.net
+
+Am descoperit pentru cele 2 hosturi porturile deschise, inchise si pe cele
+care filtreaza traficul(poate fi firewall, reguli pe rutare)
+
+Ex. 5
+
+nmap -sU -p 53,123,139,161,444,500,4567,5353,45320,51413,60202 hermes.codacloud.net
+nmap -sU -p 53,123,139,161,444,500,4567,5353,45320,51413,60202 hefaistos.codacloud.net
+
+Ex6
+
+nmap -sV --version-intensity 5 -n -Pn -v -p 21,22,23,25,53,80,138,443,8000,8080 hermes.codacloud.net
+nmap -sV --version-intensity 5 -n -Pn -v -p 21,22,23,25,53,80,138,443,8000,8080 hefaistos.codacloud.net
+
+nmap -sV --version-intensity 5 -n -Pn -v -p 53,123,139,161,444,500,4567,5353,45320,51413,60202 hermes.codacloud.net
+nmap -sV --version-intensity 5 -n -Pn -v -p 53,123,139,161,444,500,4567,5353,45320,51413,60202 hefaistos.codacloud.net
+
+Pentru acest exercitiu am observat ca majoritatea erau filtered, cu exceptia
+unora descoperite cu prrima comanda:
+PORT     STATE    SERVICE     VERSION
+21/tcp   open     ftp         ACLogic CesarFTPd 0.99g
+22/tcp   filtered ssh
+23/tcp   filtered telnet
+25/tcp   closed   smtp
+53/tcp   open     domain
+80/tcp   open     http        Apache httpd 2.4.7 ((Ubuntu))
+138/tcp  filtered netbios-dgm
+443/tcp  closed   https
+8000/tcp filtered http-alt
+8080/tcp open     http        Apache httpd 2.4.38 ((Ubuntu))
+
+
+Avem pe 80 si 8080 apache. Acesta este cunoscut pentru atacurile de tip DOS.
+
+Ex. 7
+
+nmap -sV --version-intensity 5 -n -Pn -v --top-ports hermes.codacloud.net
+Verificam ce porturi sunt cel mai des folosite si ce servicii ruleaza pe ele. 
+Poate exista vreun serviciu pe un port care nu este standard/servicii de bucataria interna care nu sunt bine protejate
+
+PORT     STATE  SERVICE         VERSION
+21/tcp   open   ftp             ACLogic CesarFTPd 0.99g
+25/tcp   closed smtp
+53/tcp   open   domain
+80/tcp   open   http            Apache httpd 2.4.7 ((Ubuntu))
+81/tcp   closed hosts2-ns
+110/tcp  closed pop3
+443/tcp  closed https
+3306/tcp closed mysql
+3389/tcp closed ms-wbt-server
+8080/tcp open   http            Apache httpd 2.4.38 ((Ubuntu))
+8081/tcp closed blackice-icecap
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+
+Ex. 8
+
+nmap -A --osscan hermes.codacloud.net
+
+Vedem ce sistem de operare ruleaza pe sistemul gazda
+
+Ex. 9
+

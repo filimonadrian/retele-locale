@@ -2,7 +2,172 @@
 #connect to fep 
 ssh costel.filimon@fep.grid.pub.ro
 #connect to vm from fep
-ssh -i ~/.ssh/openstack.key student@10.9.3.28
+ssh -i ~/.ssh/openstack.key student@10.9.4.55
+
+Ip address on openstack: 10.9.4.55
+
+A=16
+B=100
+C=164
+D=170
+E=227
+F=199
+G=49
+H=12
+I=115
+J=18
+K=185
+
+Exercise 1:
+(10 puncte) Adresare IPv4
+Configurați cu adrese IP toate legăturile din topologie, astfel:
+Rețeaua red: 10.11.$A.0/28
+Rețeaua green: 10.11.$A.16/28
+Rețeaua blue: 10.11.$B.32/30
+Sistemul host va avea prima adresă asignabilă, iar containerul, pe cea de-a doua.
+Configurați rutarea IPv4 pentru a permite comunicarea între toate sistemele. 
+Sistemele red, green și blue vor avea ruta default prin sistemul host.
+Configurați rutarea IPv4 pentru a permite comunicarea între toate sistemele. 
+Sistemele red, green și blue vor avea ruta default prin sistemul host.
+
+(10 puncte) Adresare IPv6
+Configurați adrese IPv6 pentru întreaga rețea astfel:
+Rețeaua red 2001:12:$C::/64
+Rețeaua green 2001:12:$D::/64
+Rețeaua blue 2001:12:$E::/64
+Sistemul host va avea prima adresă asignabilă, iar containerul, pe cea de-a doua.
+Configurați rutarea IPv6 pentru a permite comunicarea între toate sistemele.
+Sistemele red, green și blue vor avea ruta default prin sistemul host.
+
+10.11.16.2 red
+10.11.16.18 green
+10.11.100.34 blue
+
+2001:12:164::2 red
+2001:12:170::2 green
+2001:12:227::2 blue
+
+# FOR RED
+echo -e "
+auto eth0
+iface eth0 inet static
+address 10.11.16.2/28
+gateway 10.11.16.1
+
+iface eth0 inet6 static
+address 2001:12:164::2/64
+gateway 2001:12:164::1
+" >> /etc/network/interfaces.d/red.conf
+
+# FOR GREEN
+
+echo -e "
+auto eth0
+iface eth0 inet static
+address 10.11.16.18/28
+gateway 10.11.16.17
+
+iface eth0 inet6 static
+address 2001:12:170::2/64
+gateway 2001:12:170::1
+" >> /etc/network/interfaces.d/green.conf
+
+# FOR BLUE
+
+echo -e "
+auto eth0
+iface eth0 inet static
+address 10.11.100.34/28
+gateway 10.11.100.33
+
+iface eth0 inet6 static
+address 2001:12:227::2/64
+gateway 2001:12:227::1
+" >> /etc/network/interfaces.d/blue.conf
+
+
+# FOR HOST
+
+# for permanent routing uncomment 2 lines from 
+/etc/sysctl.conf 
+
+# configure this file to add addresses
+/etc/network/interfaces.d/containers.conf
+
+
+echo -e "
+auto veth-red
+iface veth-red inet static
+address 10.11.16.1/28
+
+iface veth-red inet6 static
+address 2001:12:164::1/64
+
+auto veth-green
+iface veth-green inet static
+address 10.11.16.17/28
+
+iface veth-green inet6 static
+address 2001:12:170::1/64
+
+auto veth-blue
+iface veth-blue inet static
+address 10.11.100.33/28
+
+iface veth-blue inet6 static
+address 2001:12:227::1/64
+" >> /etc/network/interfaces.d/containers.conf
+
+# restart the internet connection
+ifdown --force --verbose veth-red && ifup --force --verbose veth-red
+ifdown --force --verbose veth-green && ifup --force --verbose veth-green
+ifdown --force --verbose veth-blue && ifup --force --verbose veth-blue
+
+# CONFIGURE NAMES: /etc/hosts
+
+# ipv4
+10.11.16.2  red
+10.11.16.18 green
+10.11.100.34    blue
+
+#ipv6
+2001:12:164::2 red
+2001:12:170::2 green
+2001:12:227::2 green
+
+
+USERNAME=costel.filimon
+A=16
+B=100
+C=164
+D=170
+E=227
+F=199
+G=49
+H=12
+I=115
+J=18
+K=185
+
+
+checker: 
+
+
+  - $A = valoarea variabilei A
+  - $B = valoarea variabilei B
+  - $C = valoarea variabilei C
+  - $D = valoarea variabilei D
+  - $E = valoarea variabilei E
+  - $F = valoarea variabilei F
+  - $G = valoarea variabilei G
+  - $H = valoarea variabilei H
+  - $I = valoarea variabilei I
+  - $J = valoarea variabilei J
+  - $K = valoarea variabilei K
+
+
+
+
 
 # Exercise 1:
 
@@ -156,26 +321,6 @@ ip -6 address sh dev blue-eth0
 
 ping -c 1 2201::2 && ping -c 1 2202::2
 
-
-# Bonus
-
-# for permanent routing uncomment 2 lines from 
-/etc/sysctl.conf 
-
-
-# configure this file to add addresses
-/etc/network/interfaces.d/containers.conf
-
-echo -e "
-iface veth-red inet6 static
-	address 2201::1/64
-
-iface veth-green inet6 static
-  address 2202::1/64
-
-iface veth-blue inet6 static
-   address 2203::1/64
-" >> /etc/network/interfaces.d/containers.conf
 
 # restart the internet connection
 ifdown --force --verbose veth-red && ifup --force --verbose veth-red

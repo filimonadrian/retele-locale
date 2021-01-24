@@ -150,177 +150,230 @@ J=18
 K=185
 
 
-checker: 
-
-
-  - $A = valoarea variabilei A
-  - $B = valoarea variabilei B
-  - $C = valoarea variabilei C
-  - $D = valoarea variabilei D
-  - $E = valoarea variabilei E
-  - $F = valoarea variabilei F
-  - $G = valoarea variabilei G
-  - $H = valoarea variabilei H
-  - $I = valoarea variabilei I
-  - $J = valoarea variabilei J
-  - $K = valoarea variabilei K
-
-
-
-
-
-# Exercise 1:
-
-# host
-
-# set ip addresses
-ip address add 192.168.0.1/24 dev veth-red
-
-# red
-ip address add 192.168.0.2/24 dev red-eth0
-ip address show dev red-eth0
-
-# Exercise 2, 3, 4:
-# host: 
-
-# set ip address for every interface
-ip address add 10.10.10.1/24 dev veth-red && \
-ip address add 10.10.20.1/24 dev veth-green && \
-ip address add 10.10.30.1/24 dev veth-blue && \
-
-# change interfaces state to up
-ip link set dev veth-red up && \
-ip link set dev veth-green up && \
-ip link set dev veth-blue up && \
-
-# activate routing
-sysctl -w net.ipv4.ip_forward=1
-
-
-root@red:/$
-
-ip address add 10.10.10.2/24 dev red-eth0 && \
-ip link set dev red-eth0 up && \
-ip route add default via 10.10.10.1  && \
-ip link show dev red-eth0  && \
-ip route show
-ping 10.10.20.2
-
-
-root@green:/$
-
-ip address add 10.10.20.2/24 dev green-eth0  && \
-ip link set dev green-eth0 up  && \
-ip route add default via 10.10.20.1  && \
-ip route show 
-
-
-root@blue:/$ 
-
-ip address add 10.10.30.2/24 dev blue-eth0 && \
-ip link set dev blue-eth0 up  && \
-ip route add default via 10.10.30.1  && \ 
-ip route show
-
-# Ex. 5:
-# ping from machines
-
-#host 
-ping -c 1 10.10.10.2 && ping -c 1 10.10.20.2 && ping -c 1 10.10.30.2
-ip neigh sh
-
-# red 
-ping -c 1 10.10.20.2 && ping -c 1 10.10.30.2 
-ip neigh sh
-
-# green 
-ping -c 1 10.10.10.2 && ping -c 1 10.10.30.2
-ip neigh sh
-
-# blue
-ping -c 1 10.10.10.2 && ping -c 1 10.10.20.2 
-ip neigh sh
-
-# Exercise 6:
-
-# host:
-
-start_lab lab7 ex6
-ip r s
-ip address sh veth-red $ mask in /32 
-
-# red:
-
-ip r s
-ip address sh red-eth0 # mask in /24
-
-
-# Exercise7:
-
-# host
-
-# mask must be /24 like blue mask
-# set state to up
-
-ip address flush dev veth-blue && \
-ip address add 15.15.15.1/24 dev veth-blue && \
-ip link set dev veth-blue up
-
-blue:
-
-# set state to up
-ip link set dev blue-eth0 up
-ping 7.7.7.1
-
-
-# Exercise 8:
-
-# host
-# set ipv6 addresses, set state to up, activate routing
-
-ip -6 address add 2201::1/64 dev veth-red && \
-ip link set dev veth-red up && \
-ip -6 address add 2202::1/64 dev veth-green && \
-ip link set dev veth-green up && \
-ip -6 address add 2203::1/64 dev veth-blue && \
-ip link set dev veth-blue up && \
-sysctl -w net.ipv6.conf.all.forwarding=1 && \
-ip -6 address sh dev veth-red && \
-ip -6 address sh dev veth-green && \
-ip -6 address sh dev veth-blue
-
-ping -c 1 2201::2 && ping -c 1 2202::2 && ping -c 1 2203::2
-
-# red
-# set ipv6 address, set state to up and default gateway
-
-ip -6 address add 2201::2/64 dev red-eth0 && \
-ip link set dev red-eth0 up && \
-ip route add default via 2201::1 && \
-ip -6 address sh dev red-eth0
-
-ping -c 1 2202::2 && ping -c 1 2203::2
-
-# green
-# set ipv6 address, set state to up and default gateway
-
-ip -6 address add 2202::2/64 dev green-eth0 && \
-ip link set dev green-eth0 up && \
-ip route add default via 2202::1 && \
-ip -6 address sh dev green-eth0
-
-ping -c 1 2201::2 && ping -c 1 2203::2
-
-# blue
-# set ipv6 address, set state to up and default gateway
-
-ip -6 address add 2203::2/64 dev blue-eth0 && \
-ip link set dev blue-eth0 up && \
-ip route add default via 2203::1 && \
-ip -6 address sh dev blue-eth0
-
-ping -c 1 2201::2 && ping -c 1 2202::2
-
-
 # restart the internet connection
 ifdown --force --verbose veth-red && ifup --force --verbose veth-red
+
+
+Ex. 4:
+
+iptables -t nat -A POSTROUTING -s 10.11.16.2 -o eth0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.11.16.18 -o eth0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.11.100.34 -o eth0 -j MASQUERADE
+
+To iptables rules: 
+
+iptables-save > /etc/iptables/rules.v4
+sudo /sbin/iptables-save > /etc/iptables/rules.v4
+
+
+Ex. 6:
+
+ 22049 -- ssh pe blue
+iptables -t nat -A PREROUTING -p tcp --dport 22049 -j DNAT --to-destination 10.11.100.34:22
+ 22012 -- ssh pe green
+ iptables -t nat -A PREROUTING -p tcp --dport 22012 -j DNAT --to-destination 10.11.16.18:22
+ 22115 -- ssh pe red
+iptables -t nat -A PREROUTING -p tcp --dport 22115 -j DNAT --to-destination 10.11.16.2:22
+
+ 19141 -- ftp pe red
+ ip6tables -t nat -A PREROUTING -p tcp --dport 19141 -j DNAT --to-destination 2001:12:164::2:21
+ iptables -t nat -A PREROUTING -p tcp --dport 19141 -j DNAT --to-destination 10.11.16.2:21
+
+ 11522 -- trackerul de pe green -- who da fuck is this tracker?????? which port? 
+
+ iptables -t nat -A PREROUTING -p udp --dport 11522 -j DNAT --to-destination 10.11.16.18:8977
+
+
+Ex7
+https://www.cyberciti.biz/faq/iptables-block-port/
+
+Afisarer reguli:
+iptables -t filter -L -n -v --line-numbers
+
+# block smtp from red
+iptables -A INPUT -p tcp -i veth-red -s 10.11.16.2 --dport 25 -j DROP
+
+# block tracker from red
+iptables -A FORWARD -p udp -i veth-red -s 10.11.16.2 -d 10.11.16.18 --dport 8977 -j DROP
+
+
+# block tracker on RED
+# tot ce vine de pe red pentru green-tracker trebuie blocat
+iptables -A INPUT -p tcp -i veth-red -s 10.11.16.2 --dport 25 -j DROP
+
+
+udp        0      0 0.0.0.0:8977            0.0.0.0:*                           1527/python3   
+
+
+# blochez toate conexiunile trimise la blue, cu exceptia icmp, ssh si ftp
+
+iptables -A INPUT -p tcp -i veth-blue --dport 22 -j DROP
+iptables -A INPUT -p tcp --dport 21 -j DROP
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+
+iptables -D INPUT -i veth-blue -m state --state ESTABLISHED,RELATED -j ACCEPT 
+iptables -A INPUT -i veth-blue -j DROP
+iptables -D OUTPUT -i veth-blue -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -i veth-blue -j DROP
+iptables -A INPUT -p tcp -m tcp -m multiport --dports 21,22 -j ACCEPT
+
+
+
+REZOLVARE: -- problema era ca eu puneam pe input, regulile trebuiau puse pe output
+iptables -A FORWARD -p ICMP -d 10.11.100.34 -j ACCEPT
+iptables -A FORWARD -p tcp -d 10.11.100.34 --dport 21 -j ACCEPT
+iptables -A FORWARD -p tcp -d 10.11.100.34 --dport 22 -j ACCEPT
+iptables -A FORWARD -p tcp -d 10.11.100.34 -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+iptables -A FORWARD -p tcp -d 10.11.100.34 -m state --state NEW -j DROP
+
+
+
+echo -e "
+Host h
+  HostName host
+  User student
+  Port 22
+Host r
+  HostName red
+  User student
+  Port 22
+Host g
+  HostName green
+  User student
+  Port 22
+Host b
+  HostName blue
+  User student
+  Port 22
+" > ~/.ssh/config
+
+
+Ex. 9:
+https://stackoverflow.com/questions/1324421/how-to-get-past-the-login-page-with-wget
+
+
+# Log in to the server.  This only needs to be done once.
+wget --save-cookies cookies.txt --keep-session-cookies --user=fs --password=cuba1337 http://host/forbidden/
+     # --post-data 'user=fs&password=cuba1337' \
+     --user=fs --password=cuba1337 \
+     http://host/forbidden/
+
+# Now grab the page or pages we care about.
+wget -r --load-cookies cookies.txt http://host/forbidden/
+
+
+wget --save-cookies cookies.txt --keep-session-cookies --post-data 'user=fs&password=cuba1337' http://host/forbidden/
+
+
+curl --user user:pass --cookie-jar ./somefile https://xyz.com/a
+curl --cookie ./somefile https://xyz.com/b
+
+
+
+Exercitiul 10(mail)
+
+mail -s "Promotie Corona" contact@host 
+
+uuencode attachment.bin attachment.bin | mail -s "Promotie Corona" contact@host <<< $1
+// acesta cu mutt a functionat bine
+mutt -s "Promotie Corona" -a ./attachment.bin -- contact@host <<< $1
+
+
+
+
+
+for i in `curl -i ftp://ftp.example.com/pub/centos/6.5/updates/i386/repodata/ | awk '{print $9}' | grep ^8`; do
+    curl -O http://ftp.eample.com/pub/centos/6.5/${i} ;
+done
+
+
+
+
+
+
+Exerciitul 13:
+nmap -sS -p 21 host
+
+Exercitiul 12:
+Tot ce vine de la sursa blue, pentru serverul de ftp din green, accepta si trimite log
+
+Exemple:
+iptables -N LOGGING
+iptables -A INPUT -j LOGGING
+iptables -A LOGGING -m limit --limit 2/min -j LOG --log-prefix "IPTables-Dropped: " --log-level 4
+iptables -A LOGGING -j DROP
+
+For example, drop and log all connections from IP address 64.55.11.2 to your /var/log/iptables.log file:
+iptables -A INPUT -s 64.55.11.2 -m limit --limit 5/m --limit-burst 7 -j LOG --log-prefix '** HACKERS **'--log-level 4
+iptables -A INPUT -s 64.55.11.2 -j DROP
+
+Rezolvare:
+https://askubuntu.com/questions/348439/where-can-i-find-the-iptables-log-file-and-how-can-i-change-its-location
+
+Modifica fisierul in care se scriu logurile:
+/etc/rsyslog.d/<my_conf_file>
+
+:msg,contains,"insecure-telnet: " -/var/log/insecure.log
+& stop
+
+
+tot ce vine de pe blue, cu destinatie serverul de telnet, pun in log 
+iptables -I INPUT 2 -p tcp -i veth-blue -s 10.11.100.34 -d 10.11.16.18 --dport 23 -j LOG --log-prefix "insecure-telnet: "
+
+Regula corecta: 
+iptables -I FORWARD 2 -p tcp -i veth-blue -s 10.11.100.34 -d 10.11.16.18 --dport 23 -j LOG --log-prefix "insecure-telnet: "
+
+
+--log-prefix "insecure-telnet: "
+
+
+Bonus: 14
+
+(Bonus - 10 puncte) Configurați un tunel GRE (Generic Routing Encapsulation) între red și green.
+Denumiți interfețele de tunel dacic pe ambele capete.
+Folosiți rețeaua IPv6 2021:20:199::/64 pentru capetele tunelului.
+https://community.hetzner.com/tutorials/linux-setup-gre-tunnel
+https://docs.cumulusnetworks.com/cumulus-linux-42/Layer-3/GRE-Tunneling/
+
+RED:
+
+sudo echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
+sudo sysctl -p
+
+sudo ip tunnel add dacic mode gre local 10.11.16.2 remote 10.11.16.18 ttl 255
+sudo ip addr add 2021:20:199::1/64 dev dacic
+sudo ip link set dacic up
+
+GREEN:
+
+sudo ip tunnel add dacic mode gre local 10.11.16.18 remote 10.11.16.2 ttl 255
+sudo ip addr add 2021:20:199::2/64 dev dacic
+sudo ip link set dacic up
+ping 2021:20:199::1
+
+
+RED 
+echo -e "
+auto dacic
+iface dacic
+tunnel-mode gre
+tunnel-endpoint 10.11.16.18
+tunnel-local 10.11.16.2
+tunnel-ttl 225
+address 2021:20:199::1/64
+" > /etc/interfaces.d/tunneling.conf
+
+
+GREEN
+
+echo -e "
+auto dacic
+iface dacic
+tunnel-mode gre
+tunnel-endpoint 10.11.16.2
+tunnel-local 10.11.16.18
+tunnel-ttl 225
+address 2021:20:199::2/64
+" > /etc/interfaces.d/tunneling.conf
